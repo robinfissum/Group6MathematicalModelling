@@ -6,3 +6,22 @@ The movie() - function from the py-pde module requires that
 to be added to PATH so that matplotlib can find it.)
 To install it on Windows, you may follow the guide provided here:
 https://www.wikihow.com/Install-FFmpeg-on-Windows
+
+NeuroEquation2d.py:
+    -Solves the equation in the 2D case.
+    - Code uses a modified version of:
+    https://py-pde.readthedocs.io/en/latest/examples_gallery/pde_brusselator_class.html#sphx-glr-examples-gallery-pde-brusselator-class-py
+    # Todo: We need to update the script with the correct parameter values(eta, eta_A, epsilon, epsilon_A)
+    # Todo: Update this script with the correct domain dimensions (done in the grid object, and in the initial values
+    for the scalar fields for N and R)
+
+NeuroEquation3d.py:
+    -Solves the equation in the 3D case.
+    - Code uses a modified version of:
+    https://py-pde.readthedocs.io/en/latest/examples_gallery/pde_brusselator_class.html#sphx-glr-examples-gallery-pde-brusselator-class-py
+    # Todo: We need to update the script with the correct parameter values(eta, eta_A, epsilon, epsilon_A)
+    # Todo: Update this script with the correct domain dimensions (done in the grid object, and in the initial values
+    for the scalar fields for N and R)
+    # Todo: Currently, the plot is only 2d, but the problem itself is 3d. Find a way to plot it in 3d,
+    possibly by slicing the domain
+
