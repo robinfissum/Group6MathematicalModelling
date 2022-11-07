@@ -1,0 +1,8 @@
+
+
+The movie() - function from the py-pde module requires that
+"FFmpeg" is installed and added to the system PATH environment variable.
+(Internally the Movie class uses matplotlib.animation.FFMpegWriter., and its needs
+to be added to PATH so that matplotlib can find it.)
+To install it on Windows, you may follow the guide provided here:
+https://www.wikihow.com/Install-FFmpeg-on-Windows
