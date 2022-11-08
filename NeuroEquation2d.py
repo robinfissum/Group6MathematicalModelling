@@ -1,7 +1,7 @@
 import numba as nb
 import numpy as np
 
-from pde import FieldCollection, PDEBase, PlotTracker, ScalarField, UnitGrid
+from pde import FieldCollection, PDEBase, PlotTracker, ScalarField, CartesianGrid, MemoryStorage, movie
 
 
 class NeurotransmitterPDE(PDEBase):
@@ -78,13 +78,34 @@ bc_x = [bc_x_left, bc_x_right]
 bc_y = [bc_y_left, bc_y_right]
 bc = [bc_x, bc_y]
 
+# Create the grid
+interval_x = (0, 40)
+interval_y = (0, 40)
+rectangular_domain = [interval_x, interval_y]
+grid_points_per_dimension = [40, 40]
+grid = CartesianGrid(bounds=rectangular_domain, shape=grid_points_per_dimension)
 
-# initialize state
-# Todo: Replace by generic grid.
-grid = UnitGrid([40, 40])
-eq = NeurotransmitterPDE(epsilon=1, epsilon_A=1, eta=1, eta_A=1, bc=bc)
+# Set the relevant parameters
+epsilon = 1
+epsilon_A = 1
+eta = 1
+eta_A = 1
+time_max = 0.5
+dt = 0.01
+
+# Create the PDE
+# state represents the scalar fields defined on the grid
+eq = NeurotransmitterPDE(epsilon=epsilon, epsilon_A=epsilon_A, eta=eta, eta_A=eta_A, bc=bc)
 state = eq.get_initial_state(grid)
 
-# simulate the pde
-tracker = PlotTracker(interval=0.02, plot_args={"vmin": 0, "vmax": 10})
-sol = eq.solve(state, t_range=20, dt=0.01, tracker=tracker, method='implicit')
+# Simulate the PDE and plot its evolution
+storage = MemoryStorage()
+sol = eq.solve(state, t_range=time_max, dt=dt, tracker=["progress", storage.tracker(0.01)], method='implicit')
+movie(storage=storage, filename='./Animations/NeuroEvolution2D.gif')
+
+# Get the data at all time steps of all concentrations
+for time, field in storage.items():
+    # Fetch concentrations objects. To get the values as numpy.ndarray , replace by field[i].data
+    concentration_N = field[0]
+    concentration_R = field[1]
+    concentration_RN = field[2]
