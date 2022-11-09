@@ -1,7 +1,8 @@
 import numba as nb
 import numpy as np
-
+import PhysicalConstants
 from pde import FieldCollection, PDEBase, PlotTracker, ScalarField, CartesianGrid, MemoryStorage, movie
+
 
 
 class NeurotransmitterPDE(PDEBase):
@@ -18,6 +19,7 @@ class NeurotransmitterPDE(PDEBase):
         self.eta = eta
         self.eta_A = eta_A
         self.bc = bc  # boundary condition
+        self.initial_free_receptors = None
 
     def get_initial_state(self, grid):
         """prepare a useful initial state"""
@@ -29,6 +31,8 @@ class NeurotransmitterPDE(PDEBase):
         r = ScalarField(grid, data=0, label='$c_{R}$')
         for point in [[4, 4], [5, 4], [4, 5], [5, 5]]:
             r.insert(point=np.array(point), amount=20)
+        # Store the amount of neurotransmitters at t=0
+        self.initial_free_receptors = r.integral
 
         # Concentration of bound receptor-neurotransmitter pairs is zero at t=0
         rn = ScalarField(grid, data=0, label='$c_{RN}$')
@@ -42,6 +46,12 @@ class NeurotransmitterPDE(PDEBase):
         epsilon_A = self.epsilon_A
         eta = self.eta
         eta_A = self.eta_A
+
+        if r.integral <= 0.5 * self.initial_free_receptors:
+            print('Signal was sent at time t={t}')
+            exit()
+        
+
 
         rhs[0] = n.laplace(self.bc) - epsilon_A*r*n + eta_A * rn
         rhs[1] = -epsilon*r*n + eta*rn
@@ -85,12 +95,13 @@ rectangular_domain = [interval_x, interval_y]
 grid_points_per_dimension = [40, 40]
 grid = CartesianGrid(bounds=rectangular_domain, shape=grid_points_per_dimension)
 
-# Set the relevant parameters
-epsilon = 1
-epsilon_A = 1
-eta = 1
-eta_A = 1
-time_max = 0.5
+
+# # Change the parameteres to trivial
+# epsilon = 1
+# epsilon_A = 1
+# eta = 1
+# eta_A = 1
+time_max = 2
 dt = 0.01
 
 # Create the PDE
@@ -109,3 +120,4 @@ for time, field in storage.items():
     concentration_N = field[0]
     concentration_R = field[1]
     concentration_RN = field[2]
+

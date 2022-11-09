@@ -59,8 +59,12 @@ A = A_R / A_N
 epsilon_A = A * epsilon
 eta_A = A * eta
 
+# initial number of dimensionless neurotransmitters [fix dimensions so this makes sense]:
+initial_N_dimensionless = N_initial * A_N / (V * math.pow(h, 3))
+print(initial_N_dimensionless)
+
+# time scale in seconds
+t_0 = 0.00075
+
 # print all names and values
 # print(globals())
-
-
-

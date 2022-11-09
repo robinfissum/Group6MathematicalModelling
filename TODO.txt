@@ -1,0 +1,20 @@
+What we have to do:
+
+Write in document: 
+    - Deduction of equations?
+    - Scaling of equations
+    - Dimensionless constants
+    - Dimensionless equation system with initial conditions and boundary conditions
+
+Code: 
+    - Make the system dimensionless
+    - Initialize concentration matrices. For this we need the initial [dimensionless] concentrations
+    - Create a solver: 
+        - First we need the equations for the numerical scheme 
+          (Crank nicolson with implicit reaction terms ?)
+        - Once we have this, we need to read the values of the concentration matrices, and find a 
+        way to turn this into a linear system that can be solved for the concentrations at the next 
+        time step.
+        - Solve this linear system
+        - Put the values back into the concentration matrices 
+

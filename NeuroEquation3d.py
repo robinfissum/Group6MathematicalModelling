@@ -1,6 +1,6 @@
 import numba as nb
 import numpy as np
-
+from PhysicalConstants import *
 from pde import FieldCollection, PDEBase, PlotTracker, ScalarField, CartesianGrid, MemoryStorage, movie
 
 
@@ -11,22 +11,26 @@ class NeurotransmitterPDE(PDEBase):
     respectively.
     """
 
-    def __init__(self, epsilon, epsilon_A, eta, eta_A, bc="auto_periodic_neumann"):
+    def __init__(self, epsilon, epsilon_A, eta, eta_A, bc="auto_periodic_neumann", t_0, rs_c_N_3d, rs_c_R_3d):
         super().__init__()
         self.epsilon = epsilon
         self.epsilon_A = epsilon_A
         self.eta = eta
         self.eta_A = eta_A
         self.bc = bc  # boundary condition
+        self.initial_free_receptors = None
+        self.t_0=t_0
+        self.rs_c_N_3d=rs_c_N_3d
+        self.rs_c_R_3d=rs_c_R_3d
 
     def get_initial_state(self, grid):
         """prepare a useful initial state"""
         # Note: passing data=1 below sets the initial value equal to 1 everywhere for the scalar field
         n = ScalarField(grid, data=0, label="Field $c_{N}$")
-        n.insert(point=np.array([2, 2, 2]), amount=1000)
+        n.insert(point=np.array([20, 20, 39]), amount=rs_c_N_3d)
 
         r = ScalarField(grid, data=0, label="Field $c_{R}$")
-        r.insert(point=np.array([10, 10, 10]), amount=1000)
+        r.insert(point=np.array([20, 20, 1]), amount=rs_c_R_3d)
 
         # Concentration of bound receptor-neurotransmitter pairs is zero at t=0
         rn = ScalarField(grid, data=0, label="Field $c_{RN}$")
@@ -40,6 +44,10 @@ class NeurotransmitterPDE(PDEBase):
         epsilon_A = self.epsilon_A
         eta = self.eta
         eta_A = self.eta_A
+
+        if r.integral <= 0.5 * self.initial_free_receptors:
+            print('Signal was sent at time t={t}')
+            exit()
 
         rhs[0] = n.laplace(self.bc) - epsilon_A*r*n + eta_A * rn
         rhs[1] = -epsilon*r*n + eta*rn
@@ -88,10 +96,6 @@ grid_points_per_dimension = [40, 40, 40]
 grid = CartesianGrid(bounds=rectangular_domain, shape=grid_points_per_dimension)
 
 # Set the relevant parameters
-epsilon = 1
-epsilon_A = 1
-eta = 1
-eta_A = 1
 time_max = 0.5
 dt = 0.01
 
