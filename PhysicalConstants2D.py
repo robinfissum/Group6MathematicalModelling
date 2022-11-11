@@ -1,15 +1,14 @@
 import math
-
 '''
 This script constants the physical and dimensionless constants that we 
-need in our 3D mathematical model.
+need in our 2D mathematical model.
 '''
 
 # Number of elementary particles in one mole
 mole = 6.02214076 * math.pow(10, 23)
 
 # Height of synaptic cleft in meters
-h = 1.5 * math.pow(10, -8)
+h = 0
 # Radius of synaptic cleft in meters
 r = 2.2 * math.pow(10, -7)
 # Area of synaptic cleft cross-section (Not used below)
@@ -53,24 +52,16 @@ k1 = k1_ignore * math.pow(10, -3)
 k_1 = 5
 
 # Dimensionless constant epsilon
-# Should be equal to 4.219834862960392e-06
-epsilon = k1 * A_R_N * h/(alpha_N * math.pi * math.pow(r, 2))
+# Should be equal to 1.3616000491152195e-11
+epsilon = k1 * A_R_N /(alpha_N * math.pi)
 
 # Dimensionless constant eta
-# Should be equal to 1.4062500000000004e-09
-eta = k_1 * math.pow(h, 2) / alpha_N
+# Should be equal to 3.0250000000000007e-07
+eta = k_1 * math.pow(r, 2) / alpha_N
 
 # Timescale in seconds
-# Should be equal to 2.812500000000001e-10
-t_0 = math.pow(h, 2)/alpha_N
-
-# Initial amount of dimensionless free neurotransmitters (i.e. volume integral over dimensionless cleft)
-# Should be equal to 655.8467811735285
-N_initial_dimensionless = A_N * math.pi * math.pow(r, 2) / (A_R_N * math.pow(h, 2))
-
-# Initial amount of dimensionless free receptors (i.e. volume integral over dimensionless cleft)
-# Should be equal to 19.944705198675816
-R_initial_dimensionless = A_R * math.pi * math.pow(r, 2) / (A_R_N * math.pow(h, 2))
+# Should be equal to 6.05e-08
+t_0 = math.pow(r, 2)/alpha_N
 
 # To see the value of all variables, run:
-# print(globals())
+print(globals())
