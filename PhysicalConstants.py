@@ -41,6 +41,7 @@ A_R_N = A_R + A_N
 
 # Diffusivity of neurotransmitters in m^2/s 
 alpha_N = 8 * math.pow(10, -7)
+alpha_N_old = 0.3 * math.pow(10, -12)
 
 # Reaction constant k_{1} in L/(mol s)
 k1_ignore = 4 * math.pow(10, 6)
@@ -59,6 +60,13 @@ epsilon = k1 * A_R_N * h/(alpha_N * math.pi * math.pow(r, 2))
 # Dimensionless constant eta
 # Should be equal to 1.4062500000000004e-09
 eta = k_1 * math.pow(h, 2) / alpha_N
+
+
+#with alpha_N_old, 2d
+epsilon_old = k1 * A_R_N/(alpha_N_old * math.pi)
+eta_old = k_1 * math.pow(r, 2) / alpha_N_old
+print("epsilon old: ", epsilon_old)
+print("eta old: ", eta_old)
 
 # Timescale in seconds
 # Should be equal to 2.812500000000001e-10
