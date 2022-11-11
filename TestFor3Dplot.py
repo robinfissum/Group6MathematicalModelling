@@ -3,7 +3,7 @@ import numpy as np
 import math
 import PhysicalConstants
 from pde import FieldCollection, PDEBase, PlotTracker, ScalarField, CartesianGrid, MemoryStorage, movie
-from Plot3D import save_plot, turn_pngs_to_gif
+from Plot3D import save_plot, turn_pngs_to_gif, give_sortable_name
 
 class NeurotransmitterPDE(PDEBase):
     """Coupled equation for neurotransmitter-receptor reaction in 3D
@@ -111,7 +111,9 @@ def main():
     # Set the relevant parameters
     time_max_seconds = math.pow(10, -9)
     time_max_dimensionless = time_max_seconds / PhysicalConstants.t_0
-    dt_seconds = math.pow(10, -13)
+    # dt_seconds = math.pow(10, -13)
+    # The following line is only for testing (so we have a few time step)
+    dt_seconds = time_max_seconds / 20
     dt_dimensionless = dt_seconds / PhysicalConstants.t_0
     print(f'\nNumber of time steps = {time_max_dimensionless / dt_dimensionless}')
 
@@ -159,6 +161,12 @@ def main():
         if volume_box * np.sum(concentration_R.data) < 0.5 * PhysicalConstants.R_initial_dimensionless:
             print(f'Signal was sent at dimensionless time t={time}')
             print(f'That is, the signal was sent after t={time * PhysicalConstants.t_0}seconds.')
+
+        save_plot(c_n=concentration_N.data, c_r=concentration_R.data, c_rn=concentration_RN.data,
+                 time=time, length=interval_x[1], width=interval_y[1], height=interval_z[1], points_per_dim='all', 
+                 filename=f'time_step{give_sortable_name(round(time_max_dimensionless / dt_dimensionless), round(time/dt_dimensionless))}', rotate=False, elevate=False, plane=None)
+
+    turn_pngs_to_gif()
 
 
 

@@ -1,6 +1,6 @@
 import numba as nb
 import numpy as np
-import PhysicalConstants
+import PhysicalConstants2D
 from pde import FieldCollection, PDEBase, PlotTracker, ScalarField, CartesianGrid, MemoryStorage, movie
 
 
