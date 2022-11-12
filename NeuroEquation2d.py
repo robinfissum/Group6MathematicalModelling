@@ -3,6 +3,7 @@ import numpy as np
 import PhysicalConstants2D
 from pde import FieldCollection, PDEBase, PlotTracker, ScalarField, CartesianGrid, MemoryStorage, movie
 
+raise DeprecationWarning('This file is deprecated. Zuzana is moving code into NeuroEq2D.py !')
 
 
 class NeurotransmitterPDE(PDEBase):
