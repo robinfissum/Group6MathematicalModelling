@@ -3,7 +3,7 @@ import numpy as np
 import math
 import PhysicalConstants
 from pde import FieldCollection, PDEBase, PlotTracker, ScalarField, CartesianGrid, MemoryStorage, movie
-from Plot3D import Plotter3D, make_gif_from_local_png_files, give_sortable_name
+from Plot3D import Plotter3D, make_gif_from_local_png_files, give_sortable_name, cartesian_product
 
 
 class NeurotransmitterPDE(PDEBase):
@@ -22,8 +22,8 @@ class NeurotransmitterPDE(PDEBase):
         self.epsilon = PhysicalConstants.epsilon
         self.eta = PhysicalConstants.eta
         self.t0 = PhysicalConstants.t_0
-        self.initial_free_dimensionless_neurotransmitters = PhysicalConstants.N_initial_dimensionless
-        self.initial_free_dimensionless_receptors = PhysicalConstants.R_initial_dimensionless
+        self.initial_free_dimless_neurotransmitters = PhysicalConstants.N_initial_dimensionless
+        self.initial_free_dimless_receptors = PhysicalConstants.R_initial_dimensionless
         self.verbose = verbose  # print information if python implementation is used.
 
     def get_initial_state(self, grid):
@@ -32,26 +32,38 @@ class NeurotransmitterPDE(PDEBase):
         F.insert(point, amount=7) sets the integrated value equal to 7 over the box containing the point 'point'
         inside the grid. Thus, point are the coordinate, and not the indices in the grid.
         Note: If you are using insert K times, then amount must be replaced by:
-        # amount=self.initial_free_dimensionless_neurotransmitters / K
+        # amount=self.initial_free_dimless_neurotransmitters / K
+        The .insert function may not produce the desired result unless exact grid-node-coordinates are given.
         """
+        # Define scalar fields
         n = ScalarField(grid, data=0, label='$c_{N}$')
+        r = ScalarField(grid, data=0, label='$c_{R}$')
+        rn = ScalarField(grid, data=0, label='$c_{RN}$')
+
+        # Get coordinates (DOES NOT EQUAL INDICES!) of grid nodes as a list
+        grid_nodes_coordinates = cartesian_product(*grid.axes_coords)
+        grid_nodes_xy_coordinates = cartesian_product(grid.axes_coords[0], grid.axes_coords[1])
+
+        # Get maximal and minimal z-coordinate of grid points
+        z_max = grid.axes_coords[-1][-1]
+        z_min = grid.axes_coords[-1][0]
+
+        # Determine coordinates of pre/post synaptic sites. The dimensionless radius is r = 14.7
         presynaptic_terminal = []
         postsynaptic_terminal = []
-        for i in range(60):
-            for j in range(60):
-                if math.pow(i-30, 2)+math.pow(j-30, 2) <= math.pow(14.7, 2):
-                    presynaptic_terminal.append((i, j, 0.9))
-                    postsynaptic_terminal.append((i, j, 0.1))
+        x_center = np.median(grid.axes_bounds[0])
+        y_center = np.median(grid.axes_bounds[1])
+        for x, y in grid_nodes_xy_coordinates:
+            if np.linalg.norm(x=(x - x_center, y - y_center)) < 14.7:
+                presynaptic_terminal.append((x, y, z_max))
+                postsynaptic_terminal.append((x, y, z_min))
 
         for point in presynaptic_terminal:
-            n.insert(point=np.array(point), amount=self.initial_free_dimensionless_neurotransmitters/len(presynaptic_terminal))
+            n.insert(point=np.array(point), amount=self.initial_free_dimless_neurotransmitters/len(presynaptic_terminal))
 
-        r = ScalarField(grid, data=0, label='$c_{R}$')
         for point in postsynaptic_terminal:
-            r.insert(point=np.array(point), amount=self.initial_free_dimensionless_receptors/len(postsynaptic_terminal))
+            r.insert(point=np.array(point), amount=self.initial_free_dimless_receptors/len(postsynaptic_terminal))
 
-        # Concentration of bound receptor-neurotransmitter pairs is zero at t=0
-        rn = ScalarField(grid, data=0, label='$c_{RN}$')
         return FieldCollection([n, r, rn])
 
     def evolution_rate(self, state, t=0):
@@ -83,6 +95,7 @@ class NeurotransmitterPDE(PDEBase):
 
         @nb.jit
         def pde_rhs(state_data, t):
+            """ compiled helper function evaluating right-hand side """
             n = state_data[0]
             r = state_data[1]
             rn = state_data[2]
@@ -106,12 +119,12 @@ def main():
     interval_z = (0, 1)
     length_x, length_y, length_z = interval_x[1]-interval_x[0], interval_y[1]-interval_y[0], interval_z[1]-interval_z[0]
     rectangular_domain = [interval_x, interval_y, interval_z]
-    num_gridpoints = [66, 66, 33]
+    num_gridpoints = [60, 60, 30]
     grid = CartesianGrid(bounds=rectangular_domain, shape=num_gridpoints)
 
     # Set the time interval and temporal stepsize
-    time_max_seconds = 5 * math.pow(10, -13)
-    dt_seconds = math.pow(10, -13)
+    time_max_seconds = 50 * math.pow(10, -9)
+    dt_seconds = math.pow(10, -9)
     time_max_dimless = time_max_seconds / PhysicalConstants.t_0
     dt_dimless = dt_seconds / PhysicalConstants.t_0
 
@@ -124,7 +137,7 @@ def main():
     cfl_constant = dt_dimless * ((num_gridpoints[0] / length_x) ** 2 +
                                  (num_gridpoints[1] / length_y) ** 2 +
                                  (num_gridpoints[2] / length_z) ** 2)
-    print(f'The CFL constant is {round(cfl_constant,2)}...')
+    print(f'The CFL constant is {round(cfl_constant,3)}...')
     if cfl_constant > 0.5:
         print('The scheme will be UNSTABLE if an explicit method is used!')
         print('The issue may be resolved by using a smaller time step.')
@@ -143,7 +156,7 @@ def main():
     # Simulate the PDE and store its data
     storage = MemoryStorage()
     _ = eq.solve(system_state, t_range=dt_dimless * math.floor(time_max_dimless / dt_dimless), dt=dt_dimless,
-                 tracker=['progress', storage.tracker(store_data_interval)], method='implicit')
+                 tracker=['progress', storage.tracker(store_data_interval)], method='explicit')
 
     # Create a 3d animation of the PDE? This takes quite a while. If there are many gridpoints,
     # then it is recommended to not plot all of them. Thus, choose points_per_dim wisely.
@@ -172,7 +185,7 @@ def main():
         if i_want_to_create_a_3d_animation:
             plotter.save_plot(c_n=concentration_n.data, c_r=concentration_r.data, c_rn=concentration_rn.data, time=time,
                               filename=f'timestep{give_sortable_name(round(time_max_dimless / dt_dimless), round(time / dt_dimless))}',
-                              rotate=False, elevate=False)
+                              rotate=0, elevate=False)
 
     if i_want_to_create_a_3d_animation:
         make_gif_from_local_png_files()

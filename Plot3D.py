@@ -1,12 +1,16 @@
 import matplotlib.pyplot as plt
+import matplotlib
 from matplotlib import colors
 from matplotlib.colors import ListedColormap
+from time import perf_counter
 import numpy as np
 import imageio
 import math
 import os
 import glob
 
+# Choose backend. 'TkAgg', 'QtAgg' or 'GTKAgg' may be available options.
+matplotlib.use('QtAgg')
 '''
 The purpose of this script is to plot the concentrations in 3D.
 This is simply because it seems hard to make the py-pde plotting tools handle this
@@ -21,6 +25,15 @@ PLOT_FOLDER = 'Animations/'
 
 class Plotter3D:
     def __init__(self, length, width, height, data_shape, points_per_dim='all'):
+        """
+        Args:
+            length (float): Geometric length of domain in x-direction
+            width (float): Geometric length of domain in y-direction
+            height (float): Geometric length of domain in z-direction
+            data_shape (list/tuple): Number of gridpoints in x, y and z-directions
+            points_per_dim (int or 'all'): Determines how many grid points to plot in the x,y and z-directions.
+                if 'all' is passed, then every grid point will be plotted.
+        """
         self.length = length
         self.width = width
         self.height = height
@@ -31,8 +44,8 @@ class Plotter3D:
         self.x_skip_factor = self.y_skip_factor = self.z_skip_factor = None
         self.idxs = [[], [], []]
 
-        # Set 'skip-factors'. These determine how to skip indices we don't want to plot
-        # in the case that a value of 'points_per_dim' has been specified.
+        # Set the 'skip-factors'. These determine how to skip indices we don't want to plot
+        # in the case that an integer value of 'points_per_dim' has been specified.
         if isinstance(points_per_dim, int):
             if not math.gcd(self.x_num, self.y_num, self.z_num) % points_per_dim == 0:
                 raise ValueError("Choose a 'points_per_dim' dividing each dimension of array.")
@@ -51,13 +64,18 @@ class Plotter3D:
                 self.n2 = self.y_num
                 self.n3 = self.z_num
 
-        # Compute the coordinates of which points to plot
+        # Compute the geometric coordinates of which points to plot
         for x in range(self.n1):
             for y in range(self.n2):
                 for z in range(self.n3):
                     self.idxs[0].append(length/(self.x_num-1) * self.x_skip_factor * x)
                     self.idxs[1].append(width/(self.y_num-1) * self.y_skip_factor * y)
                     self.idxs[2].append(height/(self.z_num-1) * self.z_skip_factor * z)
+
+        # Store the maximal geometric x,y and z values so that we can speed up plotting without the plot rescaling
+        self.x_max = length/(self.x_num-1) * self.x_skip_factor * (self.n1 - 1)
+        self.y_max = width/(self.y_num-1) * self.y_skip_factor * (self.n2 - 1)
+        self.z_max = height/(self.z_num-1) * self.z_skip_factor * (self.n3 - 1)
 
     def save_plot(self, c_n: np.ndarray, c_r: np.ndarray, c_rn: np.ndarray,
                   time, filename='placeholder', rotate=False, elevate=False):
@@ -74,20 +92,15 @@ class Plotter3D:
         if not c_n.shape == c_r.shape == c_rn.shape == self.grid_shape:
             raise ValueError('Incompatible dimensions passed in save_plot.py.')
 
-        fig = plt.figure(figsize=plt.figaspect(1/6))
+        fig = plt.figure(figsize=plt.figaspect(1 / 6))
 
-        # To make a plot, we have to flatten(i.e. make 1d) the data
-        flat_c_n = np.array([])
-        flat_c_r = np.array([])
-        flat_c_rn = np.array([])
-
+        # To make a plot, we have to flatten the data (i.e. make it 1-dimensional)
         print('Configuring plot dimensions.')
-        for x in range(self.n1):
-            for y in range(self.n2):
-                for z in range(self.n3):
-                    flat_c_n = np.append(flat_c_n, c_n[self.x_skip_factor * x, self.y_skip_factor * y, self.z_skip_factor*z])
-                    flat_c_r = np.append(flat_c_r, c_r[self.x_skip_factor * x, self.y_skip_factor * y, self.z_skip_factor*z])
-                    flat_c_rn = np.append(flat_c_rn, c_rn[self.x_skip_factor * x, self.y_skip_factor * y, self.z_skip_factor*z])
+        x_skip_factor, y_skip_factor, z_skip_factor = self.x_skip_factor, self.y_skip_factor, self.z_skip_factor
+
+        flat_c_n = c_n[::x_skip_factor, ::y_skip_factor, ::z_skip_factor].flatten()
+        flat_c_r = c_r[::x_skip_factor, ::y_skip_factor, ::z_skip_factor].flatten()
+        flat_c_rn = c_rn[::x_skip_factor, ::y_skip_factor, ::z_skip_factor].flatten()
 
         n_max, r_max, rn_max = np.amax(c_n), np.amax(c_r), np.amax(c_rn)
 
@@ -110,14 +123,17 @@ class Plotter3D:
             r_max = 1
         if rn_max <= 0:
             rn_max = 1
-        '''
-        Transparency is determined by a function f:[0, a]->[0,1], where 
-        a is the maximal value of the array. In our case, we want f(s) to be close to
-        zero unless s is close to 1. 
-        '''
 
+        '''
+        Transparency is determined by a function f:[0, M]->[0,1], where 
+        M is the maximal value of the array. In our case, we want f(v) to be close to
+        zero unless v is close to M. 
+        '''
         def transparency_function(number):
-            return max(0.001, number)
+            if number == 0.0:
+                return 0
+            else:
+                return max(0.001, number)
 
         alpha1 = np.array([transparency_function(i / n_max) for i in flat_c_n])
         alpha2 = np.array([transparency_function(i / r_max) for i in flat_c_r])
@@ -128,25 +144,37 @@ class Plotter3D:
         ax3 = fig.add_subplot(1, 3, 3, projection='3d')
 
         print('Plotting concentrations.')
-        ignore_transparency_bug = True
+        ignore_transparency_bug = False
         if ignore_transparency_bug:
-            ax1.scatter(xs=self.idxs[0], ys=self.idxs[1], zs=self.idxs[2], alpha=alpha1, color='red')
-            ax2.scatter(xs=self.idxs[0], ys=self.idxs[1], zs=self.idxs[2], alpha=alpha2, color='blue')
-            ax3.scatter(xs=self.idxs[0], ys=self.idxs[1], zs=self.idxs[2], alpha=alpha3, color='green')
+            '''
+            This will not work because of an unresolved bug in matplotlib (which makes the plotted
+            transparency(alpha values) depend on the distance from the 'camera'). See: 
+            # https://github.com/matplotlib/matplotlib/issues/22861
+            # https://github.com/matplotlib/matplotlib/pull/23085
+            for more information. The problem appears to be in mplot3d.py
+            '''
+            ax1.scatter(xs=self.idxs[0], ys=self.idxs[1], zs=self.idxs[2], alpha=alpha1, color='red', depthshade=False)
+            ax2.scatter(xs=self.idxs[0], ys=self.idxs[1], zs=self.idxs[2], alpha=alpha2, color='blue', depthshade=False)
+            ax3.scatter(xs=self.idxs[0], ys=self.idxs[1], zs=self.idxs[2], alpha=alpha3, color='green', depthshade=False)
         else:
             num_steps = len(flat_c_n)
-            # To be 100% sure that the plot has the correct alpha values(independent of the orientation of the plot!),
-            # we have to plot the points one by one. The reason for this is an unresolved bug, as shown here:
-            # https://github.com/matplotlib/matplotlib/issues/22861
-            # Because of the for-loop, this snippet is very quite slow.
+            # To overcome the bug above, we have to plot each point separately. It is therefore quite slow.
             for x, y, z, n, r, rn, a1, a2, a3, i in zip(self.idxs[0], self.idxs[1], self.idxs[2], flat_c_n, flat_c_r, flat_c_rn, alpha1, alpha2, alpha3, range(num_steps)):
                 print(f'Configuring {i}-th point out of {num_steps} data points.')
                 if n != 0:
-                    ax1.scatter(xs=x, ys=y, zs=y, alpha=a1, color='red')
+                    ax1.scatter(xs=x, ys=y, zs=z, alpha=a1, color='red')
                 if r != 0:
-                    ax2.scatter(xs=x, ys=y, zs=y, alpha=a2, color='blue')
+                    ax2.scatter(xs=x, ys=y, zs=z, alpha=a2, color='blue')
                 if rn != 0:
-                    ax3.scatter(xs=x, ys=y, zs=y, alpha=a3, color='green')
+                    ax3.scatter(xs=x, ys=y, zs=z, alpha=a3, color='green')
+
+            # Plot corner points to prevent rescaling
+            for x in {0, self.x_max}:
+                for y in {0, self.y_max}:
+                    for z in {0, self.z_max}:
+                        ax1.scatter(xs=x, ys=y, zs=z, alpha=0)
+                        ax2.scatter(xs=x, ys=y, zs=z, alpha=0)
+                        ax3.scatter(xs=x, ys=y, zs=z, alpha=0)
 
         ax1.update({'xlabel': 'X', 'ylabel': 'Y', 'zlabel': 'Z'})
         ax2.update({'xlabel': 'X', 'ylabel': 'Y', 'zlabel': 'Z'})
@@ -175,7 +203,7 @@ def make_gif_from_local_png_files():
     """
     filenames = glob.glob('./' + PLOT_FOLDER + '*.png')
     filenames.sort()
-    with imageio.get_writer(PLOT_FOLDER + "time_plot.gif", mode='I') as writer:
+    with imageio.get_writer(PLOT_FOLDER + 'time_plot.gif', mode='I') as writer:
         for filename in filenames:
             image = imageio.imread(filename)
             writer.append_data(image)
@@ -194,3 +222,16 @@ def give_sortable_name(time_steps, t):
     used_digits = 0 if t == 0 else math.floor(math.log10(t))
     return (total_digits - used_digits)*'0' + str(t)
 
+
+def cartesian_product(*arrays):
+    """
+    Quickly compute the cartesian product of a collection of arrays and
+    return the answer as a list of lists.
+    Source: https://stackoverflow.com/questions/11144513/cartesian-product-of-x-and-y-array-points-into-single-array-of-2d-points
+    """
+    la = len(arrays)
+    dtype = np.result_type(*arrays)
+    arr = np.empty([len(a) for a in arrays] + [la], dtype=dtype)
+    for i, a in enumerate(np.ix_(*arrays)):
+        arr[..., i] = a
+    return arr.reshape(-1, la)
