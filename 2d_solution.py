@@ -34,4 +34,7 @@ storage = pde.MemoryStorage()
 
 result = eq.solve(state, t_range=2, dt=1e-3, tracker=["progress", storage.tracker(1e-3)])
 
-pde.movie(storage, filename="./Animations/res2.mp4")
+
+print(storage)
+print(type(storage))
+#pde.movie(storage, filename="./Animations/res2.mp4")

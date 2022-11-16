@@ -63,5 +63,16 @@ eta = k_1 * math.pow(r, 2) / alpha_N
 # Should be equal to 6.05e-08
 t_0 = math.pow(r, 2)/alpha_N
 
+
+# Release/reaction site total dimensionless values
+init_c_N_total = A_N*math.pi*math.pow(r,2)/(A_R_N * math.pow(r,2))
+init_c_R_total = A_R*math.pi*math.pow(r,2)/(A_R_N * math.pow(r,2))
+
+
+
 # To see the value of all variables, run:
 print(globals())
+
+
+print(init_c_N_total)
+print(init_c_R_total)
