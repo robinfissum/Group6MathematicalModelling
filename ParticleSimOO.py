@@ -1,5 +1,5 @@
 import math
-
+import time
 import numpy as np
 from numpy.linalg import norm
 from numpy.random import normal
@@ -47,8 +47,8 @@ class ParticleSim:
     def update(self):
         for n in self.transmitters:
             if n.is_bound:
-                # Probability of unbinding is set to 1% [Realistic value?]
-                should_unbind = random.random() > 0.99
+                # Probability of unbinding is set to 0.1% [Realistic value?]
+                should_unbind = random.random() > 0.999
                 if should_unbind:
                     n.is_bound = False
                     self.number_bound_receptors -= 1
@@ -70,7 +70,7 @@ class ParticleSim:
                         random_float = random.uniform(0.0, 1.0)
                         if random_float <= 1-norm(n.location-r.location) / self.reaction_radius:
                             print('Binding occurred!')
-                            n.location = r.location
+                            n.location = np.copy(r.location)
                             n.is_bound = True
                             r.is_free = False
                             self.number_bound_receptors += 1
@@ -95,6 +95,7 @@ class ParticleSim:
 
 
 def main():
+    t1 = time.time()
     # Set up the domain
     x_min, x_max = 0, 60
     y_min, y_max = 0, 60
@@ -104,9 +105,9 @@ def main():
     z_interval = (z_min, z_max)
     dt = math.pow(10, -6)
 
-    # Define initial placement of neurotransmitters(there are 5000)
+    # Define initial placement of neurotransmitters (there are 5000=10*50)
     neuro = []
-    for r in np.linspace(0, 14.7, 10):
+    for r in np.linspace(0, 14.7, 100):
         for angle in np.linspace(0, math.tau, 51)[0:-1]:
             neuro.append(np.array([30+r*math.cos(angle), 30+r*math.sin(angle), z_max]))
 
@@ -121,7 +122,7 @@ def main():
     sim = ParticleSim(x_int=x_interval, y_int=y_interval, z_int=z_interval, neurotransmitters=neuro,
                       receptors=receptors, reaction_radius=reaction_radius, dt=dt)
 
-    time_steps = 1000
+    time_steps = 100
 
     fig = plt.figure()
     ax = plt.axes(projection='3d')
@@ -131,18 +132,18 @@ def main():
     ys1 = [sim.transmitters[0].location[1]]
     zs1 = [sim.transmitters[0].location[2]]
 
+    signal_sent_timestep = None
     # Run the simulation
     for t in range(time_steps):
         sim.update()
         print(f'Time step {t} of {time_steps} completed. Fraction R bound={sim.get_fraction_bound()}')
-        if sim.get_fraction_bound() >= 0.5:
-            print(f'Signal sent at t={t}')
-            print(f'Num bound receptors={sim.number_bound_receptors}')
-            print(f'Num possible receptors={len(sim.receptors)}')
-            exit()
+        if not signal_sent_timestep and sim.get_fraction_bound() >= 0.5:
+            signal_sent_timestep = t
         xs1.append(sim.transmitters[0].location[0])
         ys1.append(sim.transmitters[0].location[1])
         zs1.append(sim.transmitters[0].location[2])
+
+    print(f'Time taken for simulation: {time.time() - t1}s.')
     # Plot the line between the positions of the particles at different time steps
     for i in range(time_steps):
         ax.plot3D([xs1[i], xs1[i + 1]], [ys1[i], ys1[i + 1]], [zs1[i], zs1[i + 1]], color='red')
@@ -158,7 +159,11 @@ def main():
                 ax.scatter(xs=x, ys=y, zs=z, alpha=0)
 
     ax.scatter(xs=xs1, ys=ys1, zs=zs1, color='blue', depthshade=False)
+    ax.update({'xlabel': 'X', 'ylabel': 'Y', 'zlabel': 'Z'})
     plt.show()
+    print(f'The signal was sent after t={signal_sent_timestep}')
+
+    print(f'Total number of time steps:{time_steps}.')
 
 
 if __name__ == '__main__':
