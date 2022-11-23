@@ -38,8 +38,10 @@ A_R = R_initial / mole
 # Should be equal to 8.555185422855751e-21
 A_R_N = A_R + A_N
 
-# Diffusivity of neurotransmitters in m^2/s 
-alpha_N = math.pow(10, -10)
+# Diffusivity of neurotransmitters in m^2/s
+alpha_N = math.pow(10, -10) 
+#Note: This value is used as it seems to be the correct order magnitude, after looking through the literature.
+#The value in Xavier's project description seems to be wrong
 
 # Reaction constant k_{1} in L/(mol s)
 k1_ignore = 4 * math.pow(10, 6)

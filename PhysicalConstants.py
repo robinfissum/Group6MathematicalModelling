@@ -39,7 +39,8 @@ A_R = R_initial / AVOGADRO_CONSTANT
 A_R_N = A_R + A_N
 
 # Diffusivity of neurotransmitters in m^2/s
-# Xavier's value 8 * math.pow(10, -7) may be many orders of magnitude too big.
+#Note: This value is used as it seems to be the correct order magnitude, after looking through the literature.
+#Xavier's value 8 * math.pow(10, -7) may be many orders of magnitude too big.
 alpha_N = math.pow(10, -10)
 alpha_N_old = 0.3 * math.pow(10, -12)
 

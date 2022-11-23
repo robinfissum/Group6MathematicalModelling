@@ -102,4 +102,4 @@ for the_time, field in storage.items():
 # print(type(storage))
 
 print(f'Time taken for entire simulation={time.time()-t1}s')
-pde.movie(storage, filename="./Animations/res2.mp4")
+pde.movie(storage, filename="./Animations/2d_solution_video.mp4")

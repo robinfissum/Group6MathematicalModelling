@@ -2,7 +2,7 @@
 
 Prerequisites for running the code:
 
-- You must have python installed (v.3.6 or later should suffice)
+- You must have python installed (v.3.6 or later should suffice) (and basic packages like numpy)
 
 - If you want to generate plots using the movie() function from py-pde, 
 you need to have FFmpeg installed and added to the system PATH environment variable.
@@ -17,6 +17,14 @@ This may not work unless you have PyQt6 installed. There are two possible fixes:
 This should work because Tkinter comes with python by default.
 (2) Alternatively, you can download PyQt6 from: https://www.riverbankcomputing.com/static/Docs/PyQt6/installation.html
 (3), or another python backend, see: https://matplotlib.org/stable/users/explain/backends.html
+
+- For the .ipynb files, visual studio code offers extension for them to work properly.
+
+### Code to run:
+If you wish to run some of the code and generate some results, we recommend
+you run 2d_solution.py, as this simulation does not take too long (should only
+take a minute or two). Remember to install FFmpeg as mentioned above, otherwise the code will
+crash when trying to save a video.
 
 ### Overview of the code
 The code utilizes the python package py-pde to solve systems of coupled PDEs.
@@ -43,6 +51,12 @@ reaction with receptors (also modelled as discrete particles)
 between Neurotransmitters, Receptors, bound receptor-neurotransmitter-pairs, 
 transporters, bound transporter-neurotransmitter-pairs and inactive naurotransmitters, 
 with a flow term for the neurotransmitters. 
+
+- flow.ipynb contains code for simulating 2D with flow (almost same code as transporters, 
+but with an underlying vectorfield and an extra term in the differential equation for c_N).
+
+- multiple_synapses.ipynb is the same as the code in flow.ipynb, except some initial values in the domain 
+have been modified to simulate two synapses.
 
 ###Regarding questions about the code
 
