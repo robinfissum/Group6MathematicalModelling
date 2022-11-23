@@ -23,8 +23,9 @@ This should work because Tkinter comes with python by default.
 ### Code to run:
 If you wish to run some of the code and generate some results, we recommend
 you run 2d_solution.py, as this simulation does not take too long (should only
-take a minute or two). Remember to install FFmpeg as mentioned above, otherwise the code will
-crash when trying to save a video.
+take a minute or two). Make sure you have completed the installation instrucitons above before running the code.
+If you have trouble with getting 2d_solution.py to run, try running for instance flow.ipynb instead.
+It takes a lot longer to run, but does not require you to install as many things to get it to run. 
 
 ### Overview of the code
 The code utilizes the python package py-pde to solve systems of coupled PDEs.
