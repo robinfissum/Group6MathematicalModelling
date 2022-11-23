@@ -77,8 +77,9 @@ N_initial_dimensionless = A_N * math.pi * math.pow(r, 2) / (A_R_N * math.pow(h, 
 R_initial_dimensionless = A_R * math.pi * math.pow(r, 2) / (A_R_N * math.pow(h, 2))
 
 # To see the value of all variables, run:
-'''
-current_locals = locals().copy()
-for key, val in current_locals.items():
-    print(key, val)
-'''
+
+if __name__ == '__main__':
+    current_locals = locals().copy()
+    for key, val in current_locals.items():
+        print(key, val)
+

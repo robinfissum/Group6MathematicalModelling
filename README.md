@@ -1,41 +1,51 @@
 # Group6MathematicalModelling
 
-####- Git and GitHub:
-Git can be installed from: 
-https://git-scm.com/book/en/v2/Getting-Started-Installing-Git
+Prerequisites for running the code:
 
-You may need to create a GitHub account on: https://github.com/
+- You must have python installed (v.3.6 or later should suffice)
 
-Once you have installed these, go into the Git Bash terminal and navigate into 
-the directory you want to store the python project in. Some basic commands are: 
+- If you want to generate plots using the movie() function from py-pde, 
+you need to have FFmpeg installed and added to the system PATH environment variable.
+(Internally the Movie class uses matplotlib.animation.FFMpegWriter., and it needs
+to be added to PATH so that matplotlib can find it.)
+To install it on Windows, you may follow the guide provided here:
+https://www.wikihow.com/Install-FFmpeg-on-Windows
 
-pwd : (print working directory) Shows where you are in the file tree
+- In Plot3d.py, near the top, we have the line:  matplotlib.use('QtAgg')
+This may not work unless you have PyQt6 installed. There are two possible fixes:
+(1) Change backend: You may e.g. try to replace the line by matplotlib.use('TkAgg') or matplotlib.use('GTKAgg')
+This should work because Tkinter comes with python by default.
+(2) Alternatively, you can download PyQt6 from: https://www.riverbankcomputing.com/static/Docs/PyQt6/installation.html
+(3), or another python backend, see: https://matplotlib.org/stable/users/explain/backends.html
 
-ls (or dir) : Shows files and folders in the current directory.
+### Overview of the code
+The code utilizes the python package py-pde to solve systems of coupled PDEs.
+The py-pde documentation can be found at https://py-pde.readthedocs.io/en/latest/getting_started.html
+Several of the PDE solvers in the various files are modified versions of the example code found 
+here: https://py-pde.readthedocs.io/en/latest/examples_gallery/pde_brusselator_class.html#sphx-glr-examples-gallery-pde-brusselator-class-py
 
-cd directoryname: Move form current directory to the directory named "directoryname" 
+- PhysicalConstants.py and PhysicalConstants2d.py contain physical and dimensionless
+constants needed in the simulations. 
 
-cd .. : Move back to previous directory (Note the space and the two dots)
+- NeuroEquation3d.py contains code for simulating diffusion of neurotransmitters and reaction with 
+receptors in 3D. 
 
-Once you have moved into the desired directory, clone the project from GitHub by typing:
+- Plot3D.py contains code for generating a 3D gif of the evolution of the system in NeuroEquation3d.py
 
-git clone https://github.com/robinfissum/Group6MathematicalModelling.git
+- 2d_solution.py contains code for simulating diffusion of neurotransmitters and reaction with 
+receptors in 2d.
 
+- ParticleSimOO.py contains code for modelling diffusion of neurotransmitters 
+as a Brownian motion particle simulation (no PDEs here), as well as a probabilistic 
+reaction with receptors (also modelled as discrete particles)
 
-You should now have the project at the specified location. 
+- transporters.ipynb contains code for simulating in 2d the PDE system 
+between Neurotransmitters, Receptors, bound receptor-neurotransmitter-pairs, 
+transporters, bound transporter-neurotransmitter-pairs and inactive naurotransmitters, 
+with a flow term for the neurotransmitters. 
 
-#### - Coding together
+###Regarding questions about the code
 
-For coding together in python, a nice option is to use Visual Studio Code, which can be 
-downloaded from: https://code.visualstudio.com/
-
-Once installed, you will need to download the extension called "Liveshare": 
-Go to the menu on the left having four stacked boxes as its symbol and click on it. 
-This opens the Extensions-Marketplace. Search for Live Share, and download this extension.
-Once this is running, open your NTNU mail and look for a session invite. Copy the URL for the session 
-and go back into VSCode. There should be a Live Share button on the top left menu (with the symbol of an 
-arrow curving over a dot). Click this button and click "Join". You may need to click "Continue as guest" and enter
-your name. Afterwards you need to enter the session link and press enter. 
-
-After the host of the LiveShare session has accepted you into the session, you should now be able to 
-program at the same time as the other group members. 
+You may contact the authors on 
+- robin-fissum@hotmail.com
+- robinol@stud.ntnu.no
