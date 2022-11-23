@@ -39,7 +39,7 @@ A_R = R_initial / mole
 A_R_N = A_R + A_N
 
 # Diffusivity of neurotransmitters in m^2/s 
-alpha_N = 8 * math.pow(10, -7)
+alpha_N = 1 * math.pow(10, -10)
 
 # Reaction constant k_{1} in L/(mol s)
 k1_ignore = 4 * math.pow(10, 6)
@@ -74,5 +74,9 @@ init_c_R_total = A_R*math.pi*math.pow(r,2)/(A_R_N * math.pow(r,2))
 print(globals())
 
 
+print("")
+print(epsilon)
+print(eta)
+print("")
 print(init_c_N_total)
 print(init_c_R_total)
