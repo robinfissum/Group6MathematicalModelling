@@ -39,7 +39,7 @@ A_R = R_initial / mole
 A_R_N = A_R + A_N
 
 # Diffusivity of neurotransmitters in m^2/s 
-alpha_N = 8 * math.pow(10, -7)
+alpha_N = math.pow(10, -10)
 
 # Reaction constant k_{1} in L/(mol s)
 k1_ignore = 4 * math.pow(10, 6)
@@ -69,10 +69,8 @@ init_c_N_total = A_N*math.pi*math.pow(r,2)/(A_R_N * math.pow(r,2))
 init_c_R_total = A_R*math.pi*math.pow(r,2)/(A_R_N * math.pow(r,2))
 
 
-
-# To see the value of all variables, run:
-print(globals())
-
-
-print(init_c_N_total)
-print(init_c_R_total)
+# To see the value of all variables
+if __name__ == '__main__':
+    current_locals = locals().copy()
+    for key, val in current_locals.items():
+        print(key, val)
